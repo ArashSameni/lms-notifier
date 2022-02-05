@@ -1,0 +1,33 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <style>
+        .new {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>lms notifier</h1>
+    <h3>------ {{ .Time }} ------</h3>
+    <p>
+        {{ range .Courses }}
+        {{ if .Diffs }}
+        تغییرات {{ .Name }} =>
+        <br>
+        <span class='new'>
+            {{ range .Diffs }}
+            - {{ . }} <br>
+            {{ end }}
+        </span>
+        <br><br>
+        {{ end }}
+        {{ end }}
+    </p>
+    <br>
+</body>
+
+</html>
