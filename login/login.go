@@ -13,9 +13,9 @@ import (
 
 var ErrIncorrectLoginInfo = errors.New("Username/Password is Incorrect")
 
-func extractCSRFToken(page string) string {
-	rgx := regexp.MustCompile(`<input type="hidden" name="execution" value="(.*?)"`)
-	return rgx.FindStringSubmatch(page)[1]
+func extractCSRFToken(page string) (field, value string) {
+	rgx := regexp.MustCompile(`<input type="hidden" name="(.*?)" value="(.*?)"`)
+	return rgx.FindStringSubmatch(page)[1], rgx.FindStringSubmatch(page)[2]
 }
 
 func Login(url, username, password string) (client *http.Client, source string, err error) {
@@ -33,9 +33,9 @@ func Login(url, username, password string) (client *http.Client, source string, 
 	}
 	resp.Body.Close()
 
-	csrf := extractCSRFToken(string(content))
+	field, csrf := extractCSRFToken(string(content))
 
-	resp, err = client.Post(url, "application/x-www-form-urlencoded", bytes.NewBuffer([]byte("username="+username+"&password="+password+"&execution="+csrf+"&_eventId=submit&geolocation=")))
+	resp, err = client.Post(url, "application/x-www-form-urlencoded", bytes.NewBuffer([]byte("username="+username+"&password="+password+"&"+field+"="+csrf+"&_eventId=submit&geolocation=")))
 	if err != nil {
 		return nil, "", err
 	}
@@ -46,7 +46,7 @@ func Login(url, username, password string) (client *http.Client, source string, 
 		return nil, "", err
 	}
 
-	if strings.Contains(string(buf), "نام کاربری یا کلمه عبور اشتباه است") {
+	if strings.Contains(string(buf), "نام کاربری یا کلمه عبور اشتباه است") || strings.Contains(string(buf), "loginerrormessage") {
 		return nil, "", ErrIncorrectLoginInfo
 	}
 
